@@ -1,13 +1,34 @@
+import java.util.*;
 import java.net.*;
 import java.io.*;
 
-//testando
 
 
 public class AgrawaRicart{
+	public static List<Process> cs_list;
+
+	public static class Process {
+		String id;
+		int timestamp;
+		Process(String id, int timestamp){
+			this.id = id;
+			this.timestamp = timestamp;
+		}
+	}
+
+	/*
+	Estados dos processos: 
+	1 - Released - processo fora da Sessao Critica
+	2 - Wanted - deseja entrar na Sessao Critica
+	3 - Held - encontra-se na Sessao Critica
+	
+	*/
 	static int estado;
 	static String id;
 	static int porta;
+	static int timestamp;
+	static int votes = 0;
+	
 	public static void main(String args[]){ 
 		//um terminal: java Ric.java A0teste0 228.5.6.7
 		//outro terminal: java Ric.java A0escute0 228.5.6.7
@@ -26,11 +47,32 @@ public class AgrawaRicart{
 		}
 		System.out.println("id: " + id);
 		
+		cs_list = new ArrayList<>();
+		
 		MulticastThread multicastThread = new MulticastThread(args[0], args[1]);
 		TCPServerThread tcpserverThread = new TCPServerThread();
 		//TCPClientThread tcpclientThread = new TCPClientThread("destino","mensagem");
 
 	}		      	
+	
+	public static void cs(){
+		//pubilca no multicast o pedido 
+		
+		//espera receber todos os OKs
+		
+		while (votes < 2) {
+				
+		}
+		
+		//entra na SC 
+
+		//sai da SC 
+		
+		//se a lista de processos for nao vazia, ele manda mensagem TCP pro proximo processo 
+		
+		
+		votes = 0;
+	}
 	
 }
 
@@ -184,6 +226,7 @@ class Connection extends Thread {
 	}
 } 
 
+//quando eu quiser mandar uma mensagem eu uso esse!
 final class TCPClientThread implements Runnable {
 	//arguments supply message and hostname
 	String id;
