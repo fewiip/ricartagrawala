@@ -7,14 +7,7 @@ import java.io.*;
 public class AgrawaRicart{
 	public static List<Process> cs_list;
 
-	public static class Process {
-		String id;
-		int timestamp;
-		Process(String id, int timestamp){
-			this.id = id;
-			this.timestamp = timestamp;
-		}
-	}
+	
 
 	/*
 	Estados dos processos: 
@@ -46,6 +39,7 @@ public class AgrawaRicart{
 		} else if (id.equals("C")) {
 			porta = 8333;
 		}
+
 		System.out.println("id: " + id);
 		
 		cs_list = new ArrayList<>();
@@ -99,9 +93,22 @@ public class AgrawaRicart{
 	public static void criticalSection() {
 
 		System.out.println("Segurando a execucao");
+
+		//um jeito de dar sleep
+		try { Thread.sleep (2000); } catch (InterruptedException ex) {}
 	}
 	
 }
+
+public class Process {
+	String id;
+	int timestamp;
+	Process(String id, int timestamp){
+		this.id = id;
+		this.timestamp = timestamp;
+	}
+}
+
 
 /*
 
@@ -144,6 +151,7 @@ final class MulticastThread implements Runnable {
 	int porta;
 	String groupName;
 	InetAddress group;
+	Random rand = new Random();
 
 	public MulticastThread (String comandoterminal,String groupName) {
 		this.comandoterminal = comandoterminal;
@@ -181,6 +189,9 @@ final class MulticastThread implements Runnable {
 				mensagem = new String(messageIn.getData());
 				comandos = mensagem.split("0");
 				//System.out.println("comando: " + comandos[1]);
+				
+				/* Se o meu estado eh Wanted ou Held, eu vou adicionar a uma lista os processos que querem entrar */
+				AgrawaRicart.cs_list.add(new Process("A", rand.nextInt(10000)));
 
 				if (comandos[1].equals("teste")){
 					
