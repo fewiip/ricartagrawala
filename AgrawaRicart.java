@@ -56,9 +56,19 @@ public class AgrawaRicart{
 
 	}		      	
 	
-	public static void cs(){
+	//chamo essa funcao pelo menu
+	public static void requestCriticalSection(){
 		//publica no multicast o pedido 
+		
+		/*
+		byte [] m = (AgrawaRicart.id + "0teste0").getBytes();
+			
+			//mensagem que eu vou enviar 
+			DatagramPacket messageOut = new DatagramPacket(m, m.length, group, 6789);
 
+			//aqui que ele envia a mensagem pro grupo 
+			s.send(messageOut);	*/
+		
 		//muda o estado 
 		AgrawaRicart.estado = 2;//Wanted!
 		
@@ -72,7 +82,7 @@ public class AgrawaRicart{
 		AgrawaRicart.estado = 3;//Held!
 		
 		//entra na SC 
-		fazAlgumaCoisa();
+		criticalSection();
 		
 		//muda o estado 
 		AgrawaRicart.estado = 1;//Released!
@@ -86,7 +96,7 @@ public class AgrawaRicart{
 		votes = 0;
 	}
 
-	public static void fazAlgumaCoisa() {
+	public static void criticalSection() {
 
 		System.out.println("Segurando a execucao");
 	}
