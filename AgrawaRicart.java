@@ -21,9 +21,10 @@ public class AgrawaRicart{
 	1 - Released - processo fora da Sessao Critica
 	2 - Wanted - deseja entrar na Sessao Critica
 	3 - Held - encontra-se na Sessao Critica
-	
 	*/
-	static int estado;
+
+	/* Se o meu estado eh Wanted ou Held, eu vou adicionar a uma lista os processos que querem entrar */
+	static int estado = 1;
 	static String id;
 	static int porta;
 	static int timestamp;
@@ -56,22 +57,38 @@ public class AgrawaRicart{
 	}		      	
 	
 	public static void cs(){
-		//pubilca no multicast o pedido 
+		//publica no multicast o pedido 
+
+		//muda o estado 
+		AgrawaRicart.estado = 2;//Wanted!
 		
 		//espera receber todos os OKs
 		
 		while (votes < 2) {
 				
 		}
+
+		//muda o estado 
+		AgrawaRicart.estado = 3;//Held!
 		
 		//entra na SC 
+		fazAlgumaCoisa();
+		
+		//muda o estado 
+		AgrawaRicart.estado = 1;//Released!
 
 		//sai da SC 
 		
 		//se a lista de processos for nao vazia, ele manda mensagem TCP pro proximo processo 
 		
+		//TCPClientThread tcpclientThread = new TCPClientThread(comandos[0],AgrawaRicart.id + "0OK0");
 		
 		votes = 0;
+	}
+
+	public static void fazAlgumaCoisa() {
+
+		System.out.println("Segurando a execucao");
 	}
 	
 }
