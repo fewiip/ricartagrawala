@@ -171,9 +171,10 @@ public class AgrawaRicart{
 			for (Process it : cs_list) {
 				System.out.println("Lista: "+it.id);           
 				TCPClientThread tcpclientThread = new TCPClientThread(it.id,AgrawaRicart.id+"NOKN");
-				cs_list.remove(it);
+				
 			}
 
+			cs_list.clear();
        		
 			/*
 			System.out.println("Removeu da lsita: "+menorTimestamp.id);
