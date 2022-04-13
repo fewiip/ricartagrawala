@@ -32,7 +32,7 @@ public class AgrawaRicart{
 
 		//int[] ports = {8111,8222,8333,8444};
 		
-		id = (args[0].split("0"))[0];
+		id = (args[0].split("N"))[0];
 
 		if (id.equals("A")) {
 			porta = 8111;
@@ -106,7 +106,7 @@ public class AgrawaRicart{
 			MulticastSocket s = new MulticastSocket(6789);
 			s.joinGroup(group);
 			//byte [] m = ("A0teste0").getBytes();//exemplo de mensagem
-			byte [] m = (AgrawaRicart.id+"0request0"+AgrawaRicart.timestamp+"0").getBytes();
+			byte [] m = (AgrawaRicart.id+"NrequestN"+AgrawaRicart.timestamp+"N").getBytes();
 			
 			//mensagem que eu vou enviar 
 			DatagramPacket messageOut = new DatagramPacket(m, m.length, group, 6789);
@@ -166,19 +166,20 @@ public class AgrawaRicart{
 		//se a lista de processos for nao vazia, ele manda mensagem TCP pro proximo processo 
 		//TCPClientThread tcpclientThread = new TCPClientThread(comandos[0],AgrawaRicart.id + "0OK0");
 		if(!cs_list.isEmpty()){
-			Process menorTimestamp = new Process("menor", 1000000000);
-
-			for (Process it : cs_list) {           
-				if(it.timestamp <= menorTimestamp.timestamp){
-					menorTimestamp = it;
-				}    
+			//Process menorTimestamp = new Process("menor", 1000000000);
+			System.out.println("Tamanho lista " + cs_list.size());
+			for (Process it : cs_list) {
+				System.out.println("Lista: "+it.id);           
+				TCPClientThread tcpclientThread = new TCPClientThread(it.id,AgrawaRicart.id+"NOKN");
+				cs_list.remove(it);
 			}
 
        		
-			   
+			/*
 			System.out.println("Removeu da lsita: "+menorTimestamp.id);
-			TCPClientThread tcpclientThread = new TCPClientThread(menorTimestamp.id,AgrawaRicart.id+"0OK0");
+			
 			cs_list.remove(menorTimestamp);
+			*/
         }
 		
 		
@@ -236,47 +237,55 @@ final class MulticastThread implements Runnable {
 				DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
 				s.receive(messageIn);
 				mensagem = new String(messageIn.getData());
-				comandos = mensagem.split("0");
+				comandos = mensagem.split("N");
 				//System.out.println("comando: " + comandos[1]);
-				
-				
+				System.out.println(comandos[0] + " e " +comandos[1] + " e " + comandos[2]);
+				String temp1 = comandos[0];
 
-				if (comandos[1].equals("request")){//chega uma requisicao
+				if (temp1.equals(AgrawaRicart.id)) {
+					//System.out.println("UEEEE");
+				}else{
+					if (comandos[1].equals("request")){//chega uma requisicao
 					
 					
-					if (!comandos[0].equals(id)) {//se o id da requisicao eh diferente do meu 
-						//System.out.println("replies: " + AgrawaRicart.estado);
-						if (AgrawaRicart.estado == 1) {//Released
-							//manda unicast pro alvo
-							//pra nao ser tipo B ouviu e vai responder pra B 
-							System.out.println(AgrawaRicart.id + " ouviu em multicast e vai responder em unicast(TCP) pra " + comandos[0]);
-							//TCPClientThread tcpclientThread = new TCPClientThread("destino","mensagem");
-							TCPClientThread tcpclientThread = new TCPClientThread(comandos[0],AgrawaRicart.id+"0OK0");
-							
-						} 
-
-						if (AgrawaRicart.estado == 2) {//wanted
-							if (Integer.parseInt(comandos[2]) < AgrawaRicart.timestamp) {
-								//responde imediatamente via TCP
-								TCPClientThread tcpclientThread = new TCPClientThread(comandos[0],AgrawaRicart.id+"0OK0");
-							
-							}else{
-								//bota na fila
-								/* Se o meu estado eh Wanted ou Held, eu vou adicionar a uma lista os processos que querem entrar */
+						if (!comandos[0].equals(id)) {//se o id da requisicao eh diferente do meu 
+							//System.out.println("replies: " + AgrawaRicart.estado);
+							if (AgrawaRicart.estado == 1) {//Released
+								//manda unicast pro alvo
+								//pra nao ser tipo B ouviu e vai responder pra B 
+								System.out.println(AgrawaRicart.id + " ouviu em multicast e vai responder em unicast(TCP) pra " + comandos[0]);
+								//TCPClientThread tcpclientThread = new TCPClientThread("destino","mensagem");
+								TCPClientThread tcpclientThread = new TCPClientThread(comandos[0],AgrawaRicart.id+"NOKN");
+								
+							} 
+	
+							if (AgrawaRicart.estado == 2) {//wanted
+								if (Integer.parseInt(comandos[2]) < AgrawaRicart.timestamp) {
+									//responde imediatamente via TCP
+									System.out.println("mandando mensagem no wanted " + comandos[2] + " e " + AgrawaRicart.timestamp);
+									TCPClientThread tcpclientThread = new TCPClientThread(comandos[0],AgrawaRicart.id+"NOKN");
+								
+								}else{
+									//bota na fila
+									/* Se o meu estado eh Wanted ou Held, eu vou adicionar a uma lista os processos que querem entrar */
+									System.out.println("Adicionou a fila: " + comandos[0]);
+									AgrawaRicart.cs_list.add(new Process(comandos[0], Integer.parseInt(comandos[2])));
+								}
+	
+							} 
+		
+							if (AgrawaRicart.estado == 3) {//held
+								//bota na fila 
+								System.out.println("Adicionou a fila: " + comandos[0]);
 								AgrawaRicart.cs_list.add(new Process(comandos[0], Integer.parseInt(comandos[2])));
-							}
-
+							} 
 						} 
 	
-						if (AgrawaRicart.estado == 3) {//held
-							//bota na fila 
-							AgrawaRicart.cs_list.add(new Process(comandos[0], Integer.parseInt(comandos[2])));
-						} 
-					} 
-
-					
-					
+						
+					}
 				}
+
+				
 				System.out.println("MultiCast Received:" + new String(messageIn.getData()));
 
 			}
@@ -327,17 +336,21 @@ class Connection extends Thread {
 		try {			                 // an echo server
 
 			String data = in.readUTF();	                  // read a line of data from the stream
-			System.out.println("Mensagem recebida de um cliente TCP: " + data);
-			String []comandos = data.split("0");
-			if(comandos[1].equals("OK") && !AgrawaRicart.id.equals(comandos[0])) {
-				AgrawaRicart.replies +=1;
-				System.out.println("numero de replies: " + AgrawaRicart.replies);
+			String []comandos = data.split("N");
+			if(!AgrawaRicart.id.equals(comandos[0])){
+				System.out.println("Mensagem recebida de um cliente TCP: " + data);
+			
+				if(comandos[1].equals("OK")) {
+					AgrawaRicart.replies +=1;
+					System.out.println("numero de replies: " + AgrawaRicart.replies);
+				}
+				if(AgrawaRicart.replies == 2) {
+					synchronized (AgrawaRicart.lock) {
+						AgrawaRicart.lock.notify();
+					}
+				}
 			}
-			if(AgrawaRicart.replies == 2) {
-				synchronized (AgrawaRicart.lock) {
-                    AgrawaRicart.lock.notify();
-                }
-			}
+			
 			out.writeUTF("teste");
 			//out.writeUTF(data);
 		}catch (EOFException e){System.out.println("EOF:"+e.getMessage());
