@@ -9,16 +9,16 @@ public class AgrawaRicart{
 	public static List<Process> cs_list;
 
 	/*
-	Estados dos processos: 
+	states dos processos: 
 	1 - Released - processo fora da Sessao Critica
 	2 - Wanted - deseja entrar na Sessao Critica
 	3 - Held - encontra-se na Sessao Critica
 	*/
 
-	/* Se o meu estado eh Wanted ou Held, eu vou adicionar a uma lista os processos que querem entrar */
-	static int estado = 1;
+	/* Se o meu state eh Wanted ou Held, eu vou adicionar a uma lista os processos que querem entrar */
+	static int state = 1;
 	static String id;
-	static int porta;
+	static int port;
 	static int timestamp;//2.147.483.647
 	static int replies = 0;
 	static Object lock = new Object();
@@ -35,11 +35,11 @@ public class AgrawaRicart{
 		id = (args[0].split("N"))[0];
 
 		if (id.equals("A")) {
-			porta = 8111;
+			port = 8111;
 		} else if (id.equals("B")) {
-			porta = 8222;
+			port = 8222;
 		} else if (id.equals("C")) {
-			porta = 8333;
+			port = 8333;
 		}
 		
 		cs_list = new ArrayList<>();
@@ -84,16 +84,9 @@ public class AgrawaRicart{
 
 	}		   
 	
-	
-	
 	//chamo essa funcao pelo menu
 	public static void requestCriticalSection(){
 		//publica no multicast o pedido 
-		
-		/*
-		
-		
-		*/
 		
 		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HHmmssSSS");
 
@@ -117,8 +110,8 @@ public class AgrawaRicart{
 			System.out.println(e);
 		}
 
-		//muda o estado 
-		AgrawaRicart.estado = 2;//Wanted!
+		//muda o state 
+		AgrawaRicart.state = 2;//Wanted!
 		
 		//espera receber todos os OKs
 		/*
@@ -128,6 +121,7 @@ public class AgrawaRicart{
 					break;
 				}
 		}*/
+
 		try {
 			synchronized (lock) {
 				lock.wait();
@@ -139,12 +133,11 @@ public class AgrawaRicart{
 
 		System.out.println("Entrando na secao critica");
 
-		//muda o estado 
-		AgrawaRicart.estado = 3;//Held!
+		//muda o state 
+		AgrawaRicart.state = 3;//Held!
 		
 		//entra na SC 
 		criticalSection();
-		
 		
 	}
 
@@ -158,8 +151,8 @@ public class AgrawaRicart{
 
 	//sai da SC 
 	public static void exitCriticalSection() {
-		//muda o estado 
-		AgrawaRicart.estado = 1;//Released!
+		//muda o state 
+		AgrawaRicart.state = 1;//Released!
 		AgrawaRicart.replies = 0;
 		
 		
@@ -189,9 +182,6 @@ public class AgrawaRicart{
 	}
 }
 
-
-
-
 final class MulticastThread implements Runnable {
 	MulticastSocket s = null;
 	String comandoterminal;
@@ -199,7 +189,7 @@ final class MulticastThread implements Runnable {
 	String[] comandos;
 	byte[] buffer = new byte[1000];
 	String id;
-	int porta;
+	int port;
 	String groupName;
 	InetAddress group;
 	Random rand = new Random();
@@ -250,8 +240,8 @@ final class MulticastThread implements Runnable {
 					
 					
 						if (!comandos[0].equals(id)) {//se o id da requisicao eh diferente do meu 
-							//System.out.println("replies: " + AgrawaRicart.estado);
-							if (AgrawaRicart.estado == 1) {//Released
+							//System.out.println("replies: " + AgrawaRicart.state);
+							if (AgrawaRicart.state == 1) {//Released
 								//manda unicast pro alvo
 								//pra nao ser tipo B ouviu e vai responder pra B 
 								System.out.println(AgrawaRicart.id + " ouviu em multicast e vai responder em unicast(TCP) pra " + comandos[0]);
@@ -260,7 +250,7 @@ final class MulticastThread implements Runnable {
 								
 							} 
 	
-							if (AgrawaRicart.estado == 2) {//wanted
+							if (AgrawaRicart.state == 2) {//wanted
 								if (Integer.parseInt(comandos[2]) < AgrawaRicart.timestamp) {
 									//responde imediatamente via TCP
 									System.out.println("mandando mensagem no wanted " + comandos[2] + " e " + AgrawaRicart.timestamp);
@@ -268,14 +258,14 @@ final class MulticastThread implements Runnable {
 								
 								}else{
 									//bota na fila
-									/* Se o meu estado eh Wanted ou Held, eu vou adicionar a uma lista os processos que querem entrar */
+									/* Se o meu state eh Wanted ou Held, eu vou adicionar a uma lista os processos que querem entrar */
 									System.out.println("Adicionou a fila: " + comandos[0]);
 									AgrawaRicart.cs_list.add(new Process(comandos[0], Integer.parseInt(comandos[2])));
 								}
 	
 							} 
 		
-							if (AgrawaRicart.estado == 3) {//held
+							if (AgrawaRicart.state == 3) {//held
 								//bota na fila 
 								System.out.println("Adicionou a fila: " + comandos[0]);
 								AgrawaRicart.cs_list.add(new Process(comandos[0], Integer.parseInt(comandos[2])));
@@ -311,7 +301,7 @@ public class TCPServerThread implements Runnable {
 
 	public void run () {
 		try{
-			int serverPort = AgrawaRicart.porta;//7896; // the server port
+			int serverPort = AgrawaRicart.port;//7896; // the server port
 			ServerSocket listenSocket = new ServerSocket(serverPort);
 			while(true) {
 				Socket clientSocket = listenSocket.accept();
@@ -366,17 +356,17 @@ class Connection extends Thread {
 final class TCPClientThread implements Runnable {
 	//arguments supply message and hostname
 	String id;
-	int portadestino;
+	int portDestination;
 	String mensagem;
 
 	public TCPClientThread (String destino, String mensagem) {
 		
 		if (destino.equals("A")) {
-			portadestino = 8111;
+			portDestination = 8111;
 		} else if (destino.equals("B")) {
-			portadestino = 8222;
+			portDestination = 8222;
 		} else if (destino.equals("C")) {
-			portadestino = 8333;
+			portDestination = 8333;
 		}
 
 		this.mensagem = mensagem;
@@ -389,7 +379,7 @@ final class TCPClientThread implements Runnable {
 		
 		Socket s = null;
 		try{
-			int serverPort = portadestino;
+			int serverPort = portDestination;
 			s = new Socket("127.0.0.1", serverPort);    //new Socket(args[1], serverPort);    
 			DataInputStream in = new DataInputStream( s.getInputStream());
 			DataOutputStream out =new DataOutputStream( s.getOutputStream());
